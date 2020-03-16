@@ -14,7 +14,7 @@ library(shinyjs)
 ui <- fluidPage(
     useShinyjs(),  # Set up shinyjs
     
-    # Application title
+    # Application title and the story
     titlePanel("Should I implement the complete izolation in my country?"),
     p("Dear president of a country,"),
     p(HTML("This simulator intends to show you the impact of your political decisions.\
@@ -23,7 +23,7 @@ ui <- fluidPage(
       being flat at the beginning, it goes crazy after a couple of weeks.")),
     p(HTML("If your are not the leader of your country, kindly forward it to your president, prime minister, or supreme leader. &#128540;"),style="color: #aa0000"),
     
-    # Sidebar with a slider input for number of bins 
+    # Sidebar with a slider inputs for parameters
     sidebarLayout(
         sidebarPanel(
             sliderInput("population",
@@ -74,6 +74,7 @@ ui <- fluidPage(
             tags$head(tags$style(type="text/css", ".container-fluid {  max-width: 900px; }")),
         )
     ),
+    # Some extra info and links
     hr(),
     h3("Further readings"),
     HTML("This is definitely not an exhaustive analysis of the situation and should be taken as educational material.\
@@ -89,41 +90,53 @@ ui <- fluidPage(
     HTML("<br><br>")
 )
 
-# Define server logic required to draw a histogram
+# Define server logic required to draw plots
 server <- function(input, output) {
 
+    # Toggle advanced features
     cex = 1.3
     shinyjs::onclick("toggleAdvanced",
                      shinyjs::toggle(id = "advanced", anim = TRUE))  
 
+    # Build a model based on input parameters
     model <- eventReactive(c(input$izolation, input$population, input$days, input$rate_policy, input$rate_daily, input$capacity), {
-        # generate bins based on input$bins from ui.R
+        # convert variables to the right scales
         capacity = input$capacity * input$population * 10**3
         days = input$days
+        
+        # we start from patient #100 and 1 death
         cases = 100
         deaths = 1
+        
+        # calculate number of new cases and deaths in each day
         for (i in 1:(days-1)){
+            # based on the policy, numbers are increasing or decreasing
+            # TODO: we might want to introduce some delay between the application of the policy and results
             if (i >= input$izolation)
                 rate = (100 - input$rate_policy)/100
             else
                 rate = (100 + input$rate_daily)/100
             
+            # compute the number of susceptible people (important when we are approaching the size of the population
             susceptible = (input$population * 10**6 - sum(cases))/(input$population * 10**6)
             
+            # add results to cases and deaths vectors
             current_cases = cases[i] * rate * susceptible
             cases = c(cases, current_cases)
             current_deaths = min(current_cases, capacity) * 0.03 + max(0, current_cases - capacity) * 0.2
             deaths = c(deaths, current_deaths)
         }
+        
+        # return estimates
         list(cases=cases, deaths=deaths, capacity=capacity)
     })
-    
+
+    # draw new cases based on the model
     output$casesPlot <- renderPlot({
         mod_list = model()
         
         scale = 1/1000000
         
-        # draw the histogram with the specified number of bins
         plot(1:input$days,
              mod_list$cases*scale,
              type='l',
@@ -144,12 +157,12 @@ server <- function(input, output) {
         abline(h = mod_list$capacity*scale)
     })
 
+    # draw cumulative cases based on the model
     output$cumsumPlot <- renderPlot({
         mod_list = model()
         
         scale = 1/1000000
         
-        # draw the histogram with the specified number of bins
         plot(1:input$days,
              cumsum(mod_list$cases)*scale,
              type='l',
