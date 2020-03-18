@@ -27,7 +27,7 @@ ui <- fluidPage(
     sidebarLayout(
         sidebarPanel(
             sliderInput("population",
-                        "Your country population in mln:",
+                        "Population of your country in mln:",
                         min = 1,
                         max = 1500,
                         value = 350),
@@ -80,7 +80,7 @@ ui <- fluidPage(
          It's just an illustration that one day delay in implementation of policies can cost you thousands of lives.\
          DO NOT TAKE ACTUAL POLICICAL DECISIONS BASED ON THAT. Consult your epidemiologists.<br/><br/>\
          This simulator was motivated by some of the online readings on coronavirus and epidemiology:\
-         <ul><li><a href='https://medium.com/@joschabach/flattening-the-curve-is-a-deadly-delusion-eea324fe9727'>“Flattening the Curve” is a deadly delusion</a>
+         <ul><li><a href='https://www.imperial.ac.uk/media/imperial-college/medicine/sph/ide/gida-fellowships/Imperial-College-COVID19-NPI-modelling-16-03-2020.pdf'>Impact of non-pharmaceutical interventions (NPIs) to reduce COVID-19 mortality and healthcare demand</a>
          <li><a href='https://medium.com/@tomaspueyo/coronavirus-act-today-or-people-will-die-f4d3d9cd99ca'>Coronavirus: Why You Must Act Now</a>
          <li><a href='https://medium.com/@ariadnelabs/social-distancing-this-is-not-a-snow-day-ac21d7fa78b4'>Social Distancing: This is Not a Snow Day</a></ul>
          If you want to improve my elementary model and simulations, push to <a href='http://github.com/kidzik/corona'>this repository</a>.\
@@ -186,9 +186,9 @@ server <- function(input, output) {
         
         paste0("<div style='text-align: center'><h3>Personalized report of your policy</h3>",
                "<p>As a result of your policies, coronavirus killed</p><p style='font-size: 20pt'>",
-               deaths,
+               format(deaths, big.mark=",", nsmall=0),
                "</p><p>people. It also infected</p><p style='font-size: 20pt'>",
-               infected,
+               format(infected, big.mark=",", nsmall=0),
                "</p><p>people which is about</p><p style='font-size: 20pt'>",
                pop_prec,"%",
                "</p><p>of your population.</p>",
